@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -13,71 +14,15 @@ namespace WindowsFormsApplication6
 {
     public partial class Form1 : Form
     {
-        public string Game => $"valve";//gearbox    //valve     //cstrike
+        public string GameMode => $"valve";//gearbox    //valve     //cstrike
 
         public string PFx86 => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
         public string DedicatedServerFolder => $@"{PFx86}\Valve\Half-Life";
-        public string DedicatedServerMapCyclePath => $@"{DedicatedServerFolder}\{Game}";
-        //public string DedicatedServerFolder => $"{PFx86}\\servers\\gameserver";
-        // public string DedicatedServerMapCyclePath => $"{PFx86}\\servers\\gameserver\\{Game}";
 
-        public string SteamFolder => $"D:\\SteamLibrary";
-        public string SteamMapCyclePath => $"D:\\SteamLibrary\\steamapps\\common\\Half-Life\\{Game}";
+        public string DedicatedServerGameModePath => $@"{DedicatedServerFolder}\{GameMode}";
 
-        #region Exclude Filters
-        private readonly List<string> _filter = new List<string>()
-        {
-            "c0a",
-            "c1a",
-            "c2a",
-            "c3a",
-            "c4a",
-            "c5a",
-            "c6a",
-            "c7a",
-            "c8a",
-            "c9a",
-            "of0a",
-            "of1a",
-            "of2a",
-            "of3a",
-            "of4a",
-            "of5a",
-            "of6a",
-            "of7a",
-            "t0a",
-            "t1a",
-            "t2a",
-            "t3a",
-            "t4a",
-            "t5a",
-            "t6a",
-            "t7a",
-            "ofboot",
-            "ctf",
-            "hl2",
-            "half-life 2"
-        };
-
-
-        public List<string> ExcludeFilter
-        {
-            get
-            {
-                var list = Settings.Default.ExcludedMaps.Split(',').ToList().Where(x => x != string.Empty).ToList();
-                return list;
-            }
-
-            set
-            {
-                var xFilter = value.Aggregate((current, item) => $"{current},{item}");
-                Settings.Default.ExcludedMaps = xFilter;
-                Settings.Default.Save();
-            }
-        
-        }
-
-        #endregion
+        public string DedicatedServerMapPath => $@"{DedicatedServerFolder}\{GameMode}\maps";
 
         public List<string> LastSelectedMaps
         {
@@ -93,137 +38,68 @@ namespace WindowsFormsApplication6
                 Settings.Default.SelectedMaps = xFilter;
                 Settings.Default.Save();
             }
-
         }
-
-
 
         public Form1()
         {
             InitializeComponent();
+            setPositions();
         }
 
-        private void FullListBox_SelectedIndexChanged(object sender, EventArgs e)
+        public static List<string> ExcludeFilter
         {
-//            var items = FullListBox.SelectedItems;
-//            SelectedListBox.Items.Clear();
-//            foreach (var item in items)
-//            {
-//                SelectedListBox.Items.Add(item);
-//            }
-        }
-
-        /// <summary>
-        /// Find Map Folders
-        /// </summary>
-        /// <param name="Path">Supply the path for the method to start looking in</param>
-        /// <returns>IEnumerable of folders</returns>
-        private IEnumerable<string> FindMapFolders(string Path)
-        {
-            var tempDirs = Directory.EnumerateDirectories(Path).ToList();
-            var mapFolders = new List<string>();
-            do
+            get
             {
-                var newDirs = new List<string>();
-                foreach (var dir in tempDirs)
-                {
-                    var foundNewDirs = Directory.EnumerateDirectories(dir).ToList();
-                    foreach (var fDir in foundNewDirs)
-                    {
-                        if (fDir.ToLower().Contains("maps") && !fDir.ToLower().Contains("hl2") && !fDir.ToLower().Contains("half-life 2"))
-                        {
-                            mapFolders.Add(fDir);
-                        }
-                        else
-                        {
-                            newDirs.Add(fDir);
-                        }
-
-                        //newDirs = Directory.EnumerateDirectories(dir).ToList();
-                    }
-                    tempDirs = newDirs;
-                }
-
-
-            } while (tempDirs.Count() > 0);
-
-
-            return mapFolders;
-        }
-
-        private IEnumerable<string> FindMapFiles(IEnumerable<string> mapFolders)
-        {
-            var maps = new List<string>();
-            foreach (var folder in mapFolders)
-            {
-                var tempfiles = Directory.EnumerateFiles(folder);
-
-                var filteredFiles = tempfiles.Where(x => x.EndsWith(".bsp") && !_filter.Any(x.Contains)).ToList();
-
-
-
-                foreach (var tempFile in filteredFiles)
-                {
-                    maps.Add(Path.GetFileNameWithoutExtension(tempFile));
-                    maps.Sort();
-                }
-               // break;
+                var list = Settings.Default.ExcludedMaps.Split(',').ToList().Where(x => x != string.Empty).ToList();
+                return list;
             }
 
+            set
+            {
+                var xFilter = value.Aggregate((current, item) => $"{current},{item}");
+                Settings.Default.ExcludedMaps = xFilter;
+                Settings.Default.Save();
+            }
 
-            //path get file name
+        }
+        private void RemoveFromExclusionList(string item)
+        {
+            Settings.Default.ExcludedMaps = Settings.Default.ExcludedMaps.Replace(item,"").Replace(",,",",");
+            Settings.Default.Save();
+        }
 
-            return maps;
+        private void AddToExclusionFiler(string item)
+        {
+            Settings.Default.ExcludedMaps += string.IsNullOrEmpty(Settings.Default.ExcludedMaps) ? item : $",{item}";
+            Settings.Default.Save();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            FindMaps();
+            foreach (var map in FileHelper.FindMaps(DedicatedServerMapPath, ExcludeFilter))
+            {
+                FullListView.Items.Add(map);
+            }
             LoadExcludedMaps();
+            setPositions();
         }
 
         private void btnReloadMaps_Click(object sender, EventArgs e)
         {
+            LoadExcludedMaps();
             ReLoadFullList();
         }
 
         private void ReLoadFullList()
         {
             FullListView.Items.Clear();
-            FindMaps();
-            LoadExcludedMaps();
-            LoadLastSelectedMaps();
-        }
-
-        private void FindMaps()
-        {
-            var mapfolders = FindMapFolders(DedicatedServerFolder).ToList();
-            mapfolders.AddRange(FindMapFolders(DedicatedServerFolder));
-
-            var maps = FindMapFiles(mapfolders);
-
-            var filteredMaps = maps.Where(x => !ExcludeFilter.Any(x.Contains));
-
-            foreach (var map in filteredMaps.Distinct())
+            foreach (var map in FileHelper.FindMaps(DedicatedServerMapPath, ExcludeFilter))
             {
                 FullListView.Items.Add(map);
             }
-
-           
-
+            LoadLastSelectedMaps();
         }
-
-        private void LoadExcludedMaps()
-        {
-            if (ExcludeFilter.Count > 0)
-            {
-                foreach (var map in ExcludeFilter)
-                {
-                    ExcludeListView.Items.Add(map);
-                }
-            }
-        }
-
+        
         private void LoadLastSelectedMaps()
         {
             if (LastSelectedMaps.Count > 0)
@@ -235,39 +111,16 @@ namespace WindowsFormsApplication6
             }
         }
 
-
-
-
-        private void CreateMapCycle(List<string> selectedMaps, string mapCyclePath)
+        private void LoadExcludedMaps()
         {
-            var mapcycle = $"{mapCyclePath}\\mapcycle.txt";
-            using (var file = new System.IO.StreamWriter(mapcycle))
+            ExcludeListView.Items.Clear();
+            if (ExcludeFilter.Count > 0)
             {
-                foreach (var map in selectedMaps)
+                foreach (var item in ExcludeFilter)
                 {
-                    file.WriteLine(map);
+                    ExcludeListView.Items.Add(item);
                 }
             }
-
-            var motd = $"{mapCyclePath}\\motd.txt";
-            using (var file = new System.IO.StreamWriter(motd))
-            {
-                file.WriteLine("CREATED bY --> The Grumpy Map Cycler<--");
-                file.WriteLine("--------------------------");
-                file.WriteLine("");
-                file.WriteLine("Hello  TIM,  Hello Dillon.");
-                file.WriteLine("");
-                file.WriteLine("WHo's gonna KICK your BUTT!!!!!!");
-                file.WriteLine("");
-                file.WriteLine("");
-                file.WriteLine("The Selected Maps Are :");
-                file.WriteLine("");
-                foreach (var map in selectedMaps)
-                {
-                    file.WriteLine(map);
-                }
-            }
-
         }
 
         private void btnCreateMapCycle_Click(object sender, EventArgs e)
@@ -277,20 +130,16 @@ namespace WindowsFormsApplication6
             {
                 selectedMaps.Add(SelectedListView.Items[i].Text);
             }
-            CreateMapCycle(selectedMaps, DedicatedServerMapCyclePath);
-          //  CreateMapCycle(selectedMaps, SteamMapCyclePath);
+            FileHelper.CreateMapCycle(selectedMaps, DedicatedServerGameModePath);
         }
 
         private void btnAddToList_Click(object sender, EventArgs e)
         {
             var items = FullListView.SelectedItems;
-            SelectedListView.Items.Clear();
             for (int i = 0; i < items.Count ; i++)
             {
                 SelectedListView.Items.Add(items[i].Text);
             }
-
-           
         }
 
         private void FullListView_MouseClick(object sender, MouseEventArgs e)
@@ -303,27 +152,80 @@ namespace WindowsFormsApplication6
 
         private void excludeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var items = FullListView.SelectedItems.Count;
-            var newList = new List<string>();
-            for (var i = 0; i < items; i++)
+            foreach (ListViewItem selectedItem in FullListView.SelectedItems)
             {
-                ExcludeListView.Items.Add(FullListView.SelectedItems[i].Text);
-                newList.Add( FullListView.SelectedItems[i].Text);
+                AddToExclusionFiler(selectedItem.Text);
             }
-            ExcludeFilter = newList;
-
+            LoadExcludedMaps();
             ReLoadFullList();
         }
 
         private void includeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var items = ExcludeListView.SelectedItems.Count;
-
-            for (var i = 0; i < items; i++)
+            foreach (ListViewItem selectedItem in ExcludeListView.SelectedItems)
             {
-                ExcludeListView.Items.Remove(FullListView.SelectedItems[0]);
+                RemoveFromExclusionList(selectedItem.Text);
             }
+            LoadExcludedMaps();
             ReLoadFullList();
         }
+
+        private void setPositions()
+        {
+            FullListView.Top = 100;
+            FullListView.Left = 10;
+            FullListView.Width = (int)(((double)this.Width) / 2.4);
+            FullListView.Height = ExcludeListView.Top - FullListView.Top - 10;
+            SelectedListView.Top = FullListView.Top;
+            SelectedListView.Width = FullListView.Width;
+            SelectedListView.Left = this.Width - (SelectedListView.Width + 27);
+            SelectedListView.Height = FullListView.Height;
+            btnAddToList.Left = FullListView.Right + ((SelectedListView.Left - FullListView.Right) / 2) - (btnAddToList.Width / 2);
+            btnAddToList.Top = (FullListView.Top + (FullListView.Height / 2)) - (btnAddToList.Height / 2);
+            ExcludeListView.Top = this.Height - 80 - ExcludeListView.Height;
+            ExcludeListView.Left = FullListView.Left;
+            ExcludeListView.Width = this.Width - 37;
+            ExcludeListView.Height = this.Height / 5;
+            btnCreateMapCycle.Top = ExcludeListView.Bottom + 10;
+            btnCreateMapCycle.Left = ExcludeListView.Right - btnCreateMapCycle.Width;
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            setPositions();
+        }
+
+        private void Form1_SizeChanged(object sender, EventArgs e)
+        {
+            setPositions();
+        }
+
+        private void Form1_ClientSizeChanged(object sender, EventArgs e)
+        {
+            setPositions();
+        }
+
+        private void ClearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectedListView.Items.Clear();
+        }
+
+        private void RemoveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in SelectedListView.SelectedItems)
+            {
+                SelectedListView.Items.Remove(item);
+            }
+        }
+
+        private void SelectedListView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if ((e.Button & MouseButtons.Right) != 0)
+            {
+                SelectedListContextMenu.Show(SelectedListView, new Point(e.X, e.Y));
+            }
+        }
+
+
     }
 }

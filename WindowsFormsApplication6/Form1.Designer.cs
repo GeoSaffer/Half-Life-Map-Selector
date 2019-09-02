@@ -43,8 +43,13 @@
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ExcludeListContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SelectedListContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.FullListContextMenu.SuspendLayout();
             this.ExcludeListContextMenu.SuspendLayout();
+            this.SelectedListContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnReloadMaps
@@ -89,6 +94,7 @@
             this.SelectedListView.TabIndex = 7;
             this.SelectedListView.UseCompatibleStateImageBehavior = false;
             this.SelectedListView.View = System.Windows.Forms.View.Details;
+            this.SelectedListView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SelectedListView_MouseClick);
             // 
             // columnHeader1
             // 
@@ -159,20 +165,48 @@
             this.ExcludeListContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.includeToolStripMenuItem});
             this.ExcludeListContextMenu.Name = "contextMenuStrip1";
-            this.ExcludeListContextMenu.Size = new System.Drawing.Size(153, 48);
+            this.ExcludeListContextMenu.Size = new System.Drawing.Size(114, 26);
             // 
             // includeToolStripMenuItem
             // 
             this.includeToolStripMenuItem.Name = "includeToolStripMenuItem";
-            this.includeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.includeToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.includeToolStripMenuItem.Text = "Include";
             this.includeToolStripMenuItem.Click += new System.EventHandler(this.includeToolStripMenuItem_Click);
+            // 
+            // SelectedListContextMenu
+            // 
+            this.SelectedListContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.clearToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.removeToolStripMenuItem});
+            this.SelectedListContextMenu.Name = "SelectedListContextMenu";
+            this.SelectedListContextMenu.Size = new System.Drawing.Size(118, 54);
+            // 
+            // clearToolStripMenuItem
+            // 
+            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.clearToolStripMenuItem.Text = " Clear";
+            this.clearToolStripMenuItem.Click += new System.EventHandler(this.ClearToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(114, 6);
+            // 
+            // removeToolStripMenuItem
+            // 
+            this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
+            this.removeToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.removeToolStripMenuItem.Text = "Remove";
+            this.removeToolStripMenuItem.Click += new System.EventHandler(this.RemoveToolStripMenuItem_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(636, 501);
+            this.ClientSize = new System.Drawing.Size(625, 503);
             this.Controls.Add(this.ExcludeListView);
             this.Controls.Add(this.FullListView);
             this.Controls.Add(this.SelectedListView);
@@ -182,8 +216,12 @@
             this.Name = "Form1";
             this.Text = "Half-Life Multi Player Map Selector";
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.ClientSizeChanged += new System.EventHandler(this.Form1_ClientSizeChanged);
+            this.SizeChanged += new System.EventHandler(this.Form1_SizeChanged);
+            this.Resize += new System.EventHandler(this.Form1_Resize);
             this.FullListContextMenu.ResumeLayout(false);
             this.ExcludeListContextMenu.ResumeLayout(false);
+            this.SelectedListContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -204,6 +242,10 @@
         private System.Windows.Forms.ToolStripMenuItem excludeToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip ExcludeListContextMenu;
         private System.Windows.Forms.ToolStripMenuItem includeToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip SelectedListContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
     }
 }
 
